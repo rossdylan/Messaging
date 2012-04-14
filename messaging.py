@@ -152,7 +152,7 @@ if __name__ == "__main__":
     """This is for tests"""
     import sys
     if sys.argv[1] == "hub":
-        hub = MessagingHub(5667,5668,10)
+        hub = MessagingHub("DefaultHub", 5667,5668,10)
         hub.start()
     elif sys.argv[1] == "pub":
         pub = MessagingPublisher("carthage.csh.rit.edu",5667)
