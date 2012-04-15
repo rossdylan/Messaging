@@ -91,8 +91,8 @@ class MessagingSubscriber(object):
         """
         self.zmq_context = zmq.Context(1)
         self.subscription = self.zmq_context.socket(zmq.SUB)
-        for sub in subscriptions:
-            self.subscription.setsockopt(zmq.SUBSCRIBE, sub)
+        self.subscription.setsockopt(zmq.SUBSCRIBE, "")
+        self.subscriptions = subscriptions
         self.hub_addr = hub_addr
         self.hub_port = hub_port
 
@@ -145,7 +145,6 @@ class MessagingPublisher(object):
         :type kwargs: dict
         :param kwargs: used to create a json blob which is the message to be sent
         """
-        print "Sending", kwargs
         self.publisher.send_multipart([topic,json.dumps(kwargs)])
         self.publisher.recv()
 
