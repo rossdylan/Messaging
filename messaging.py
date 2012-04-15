@@ -58,11 +58,12 @@ class MessagingHub(object):
         self.worker_sock.bind(self.worker_url)
         self.subscriber_sock.bind("tcp://*:{}".format(self.sub_port))
         self.publisher_sock.bind("tcp://*:{}".format(self.pub_port))
-        for peer in self.peers:
-            processDevice = ProcessDevice(zmq.QUEUE,zmq.SUB,zmq.REQ)
-            processDevice.connect_out(peer)
-            processDevice.connect_in("tcp://localhost:{}".format(self.pub_port))
-            processDevice.start()
+        if len(self.peers) > 0:
+            for peer in self.peers:
+                processDevice = ProcessDevice(zmq.QUEUE,zmq.SUB,zmq.REQ)
+                processDevice.connect_out(peer)
+                processDevice.connect_in("tcp://localhost:{}".format(self.pub_port))
+                processDevice.start()
 
         for i in range(self.max_workers):
             t = Thread(target=self.worker)
