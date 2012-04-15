@@ -43,6 +43,7 @@ class MessagingHub(object):
         worker_sock.connect(self.worker_url)
         while True:
             [meta, content] = worker_sock.recv_multipart()
+            print meta, content
             split_msg = meta.split("::")
             routing = split_msg[0]
             if not ":" in routing:
@@ -60,7 +61,7 @@ class MessagingHub(object):
         self.publisher_sock.bind("tcp://*:{}".format(self.pub_port))
         if len(self.peers) > 0:
             for peer in self.peers:
-                processDevice = ProcessDevice(zmq.QUEUE,zmq.SUB,zmq.REQ)
+                processDevice = ProcessDevice(zmq.QUEUE,zmq.SUB,zmq.DEALER)
                 processDevice.connect_out(peer)
                 processDevice.connect_in("tcp://localhost:{}".format(self.pub_port))
                 processDevice.start()
@@ -153,12 +154,12 @@ if __name__ == "__main__":
     """This is for tests"""
     import sys
     if sys.argv[1] == "hub":
-        hub = MessagingHub("DefaultHub", 5667,5668)
+        hub = MessagingHub("PosidenHub", 5667,5668, peers=['tcp://10.8.0.10:5668',])
         hub.start()
     elif sys.argv[1] == "pub":
         pub = MessagingPublisher("localhost",5667)
         while True:
-            pub.publish("derpy-topic",derp=1234,herp="derpy")
+            pub.publish("derpy-topic",hello="Greetings from Posiden", to=" to Selig")
             sleep(2)
     elif sys.argv[1] == "sub":
         sub = MessagingSubscriber("localhost",5668, subscriptions = ['derpy-topic',])
