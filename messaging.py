@@ -42,13 +42,13 @@ class MessagingHub(object):
         worker_sock = self.zmq_context.socket(zmq.REP)
         worker_sock.connect(self.worker_url)
         while True:
-            msg = worker_sock.recv()
-            split_msg = msg.split("::")
+            [meta, content] = worker_sock.recv_multipart()
+            split_msg = meta.split("::")
             routing = split_msg[0]
-            if "{" in routing:
-                self.subscriber_sock.send(self.hub_name + "::" + msg)
+            if not ":" in routing:
+                self.subscriber_sock.send_multipart([self.hub_name + "::" + meta, content])
             if not self.hub_name in routing:
-                self.subscriber_sock.send(self.hub_name + ":" + msg)
+                self.subscriber_sock.send_multipart([self.hub_name + ":" + meta, content])
             worker_sock.send("")
 
     def start(self):
@@ -99,11 +99,12 @@ class MessagingSubscriber(object):
     def start(self):
         self.subscription.connect("tcp://{}:{}".format(self.hub_addr,self.hub_port))
         while True:
-            data = self.subscription.recv()
-            data = data.split("::")
-            data = "::".join(data[1:]) #throw out the routing information we do not need it here
-            t = Thread(target=self.process, args=(json.loads(data),))
-            t.start()
+            [meta, content] = self.subscription.recv_multipart()
+            meta = meta.split("::")
+            topic = "::".join(meta[1:]) #throw out the routing information we do not need it here
+            if topic in self.subscriptions:
+                t = Thread(target=self.process, args=(json.loads(content),))
+                t.start()
 
     def process(self,data):
         """
@@ -153,13 +154,13 @@ if __name__ == "__main__":
     """This is for tests"""
     import sys
     if sys.argv[1] == "hub":
-        hub = MessagingHub("DefaultHub", 5667,5668,10)
+        hub = MessagingHub("DefaultHub", 5667,5668)
         hub.start()
     elif sys.argv[1] == "pub":
-        pub = MessagingPublisher("carthage.csh.rit.edu",5667)
+        pub = MessagingPublisher("localhost",5667)
         while True:
             pub.publish("derpy-topic",derp=1234,herp="derpy")
             sleep(2)
     elif sys.argv[1] == "sub":
-        sub = MessagingSubscriber("carthage.csh.rit.edu",5668, subscriptions = ['derpy-topic',])
+        sub = MessagingSubscriber("localhost",5668, subscriptions = ['derpy-topic',])
         sub.start()
