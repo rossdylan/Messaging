@@ -160,5 +160,5 @@ if __name__ == "__main__":
             pub.publish("derpy-topic",derp=1234,herp="derpy")
             sleep(2)
     elif sys.argv[1] == "sub":
-        sub = MessagingSubscriber("carthage.csh.rit.edu",5668, topic = ['derpy-topic',])
+        sub = MessagingSubscriber("carthage.csh.rit.edu",5668, subscriptions = ['derpy-topic',])
         sub.start()
