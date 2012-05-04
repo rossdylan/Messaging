@@ -155,5 +155,5 @@ if __name__ == "__main__":
             pub.publish("derpy-topic",hello="Greetings from Posiden", to=" to Selig")
             sleep(2)
     elif sys.argv[1] == "sub":
-        sub = MessagingSubscriber("10.8.0.10",5668, subscriptions = ['derpy-topic',])
+        sub = MessagingSubscriber("localhost",5668, subscriptions = ['derpy-topic',])
         sub.start()
