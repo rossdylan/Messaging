@@ -1,1 +1,6 @@
-Messaging is a system designed to allow applications to seamlessly communicate. It provides a A central hub, and example publishers and subscribers who use the hub to exchange json blobs. The System itself is protocol agnostic as it was created to send any valid json. The hubs have a built in way to route messages between themselves. Besides this very basic routing system between hubs there is no routing. When a publisher sends a messaging into the hub, it is sent to all subscribers on that hub, and all hubs that, the hub is connected to.
+Messaging is a system designed to allow applications to seamlessly communicate. It provides a A central hub, and example publishers and subscribers who use the hub to exchange json blobs. 
+The System itself is protocol agnostic as it was created to send any valid json.
+The hubs have a built in way to route messages between themselves.
+Besides this very basic routing system between hubs there is no routing.
+When a publisher sends a messaging into the hub, it is sent to all subscribers on that hub, and all hubs that, the hub is connected to.
+
