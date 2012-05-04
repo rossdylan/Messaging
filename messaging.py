@@ -1,11 +1,10 @@
 import zmq
-from zmq.devices import ProcessDevice
 from threading import Thread
 from time import sleep
 import json
 
 class MessagingHub(object):
-    def __init__(self, hub_name, pub_port, sub_port, max_workers=10, peers=[]):
+    def __init__(self, hub_name, pub_port, sub_port, max_workers=10):
         """
         Central Messaging hub used to direct traffic and send messages from publishers to all subscribers
 
@@ -21,8 +20,6 @@ class MessagingHub(object):
         :type max_workers: int
         :param max_workers: max number of threads to use to process incoming messages
 
-        :type peers: list
-        :param peers: list of peer hubs to connect to and get data from
         """
         self.hub_name = hub_name
         self.zmq_context = zmq.Context(1)
@@ -33,7 +30,6 @@ class MessagingHub(object):
         self.worker_sock = self.zmq_context.socket(zmq.DEALER)
         self.max_workers = max_workers
         self.worker_url = "inproc://workers"
-        self.peers = peers #peers list is just a list of "tcp://hub_addr:hub_port" we then connect to this and use it to subscribe to their shits
 
     def worker(self):
         """
@@ -51,6 +47,7 @@ class MessagingHub(object):
             if not self.hub_name in routing:
                 self.subscriber_sock.send_multipart([self.hub_name + ":" + meta, content])
             worker_sock.send("")
+            print "down with task"
 
     def start(self):
         """"
@@ -59,12 +56,6 @@ class MessagingHub(object):
         self.worker_sock.bind(self.worker_url)
         self.subscriber_sock.bind("tcp://*:{}".format(self.sub_port))
         self.publisher_sock.bind("tcp://*:{}".format(self.pub_port))
-        if len(self.peers) > 0:
-            for peer in self.peers:
-                processDevice = ProcessDevice(zmq.QUEUE,zmq.SUB,zmq.DEALER)
-                processDevice.connect_out(peer)
-                processDevice.connect_in("tcp://localhost:{}".format(self.pub_port))
-                processDevice.start()
 
         for i in range(self.max_workers):
             t = Thread(target=self.worker)
@@ -148,13 +139,15 @@ class MessagingPublisher(object):
         """
         self.publisher.send_multipart([topic,json.dumps(kwargs)])
         self.publisher.recv()
+        print "done with pub"
 
 
 if __name__ == "__main__":
     """This is for tests"""
     import sys
     if sys.argv[1] == "hub":
-        hub = MessagingHub("PosidenHub", 5667,5668, peers=['tcp://10.8.0.10:5668',])
+        hub = MessagingHub("PosidenHub", 5667,5668)
+        #hub = MessagingHub("PosidenHub", 5667, 5668)
         hub.start()
     elif sys.argv[1] == "pub":
         pub = MessagingPublisher("localhost",5667)
@@ -162,5 +155,5 @@ if __name__ == "__main__":
             pub.publish("derpy-topic",hello="Greetings from Posiden", to=" to Selig")
             sleep(2)
     elif sys.argv[1] == "sub":
-        sub = MessagingSubscriber("localhost",5668, subscriptions = ['derpy-topic',])
+        sub = MessagingSubscriber("10.8.0.10",5668, subscriptions = ['derpy-topic',])
         sub.start()
